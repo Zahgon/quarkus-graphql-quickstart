@@ -4,18 +4,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![code of conduct](https://img.shields.io/badge/Conduct-Contributor%20Covenant%202.1-purple.svg)](CODE_OF_CONDUCT.md)
 
-![Build with Maven](https://github.com/amusarra/quarkus-graphql-quickstart/actions/workflows/build_via_quarkus_cli.yml/badge.svg)
+![CI Build](https://github.com/amusarra/quarkus-graphql-quickstart/actions/workflows/build.yml/badge.svg)
 ![CI Docker build](https://github.com/amusarra/quarkus-graphql-quickstart/actions/workflows/docker_publish.yml/badge.svg)
-![CI Docker build native amd64](https://github.com/amusarra/quarkus-graphql-quickstart/actions/workflows/docker_publish_native_quarkus_cli.yml/badge.svg)
 
 ## Container Images
 
 | Image                                        | Latest Tag                                                                                                                     | Repository Link                                                                   | Pull Command                                                                                                                                                                                                 |
 |----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `amusarra/quarkus-graphql-quickstart`        | ![Docker Image Version (latest by date)](https://img.shields.io/docker/v/amusarra/quarkus-graphql-quickstart?sort=date)        | [Docker Hub](https://hub.docker.com/r/amusarra/quarkus-graphql-quickstart)        | Pull the latest version `docker pull amusarra/quarkus-graphql-quickstart:latest`                                                                                                                             |
-| `amusarra/quarkus-graphql-quickstart-native` | ![Docker Image Version (latest by date)](https://img.shields.io/docker/v/amusarra/quarkus-graphql-quickstart-native?sort=date) | [Docker Hub](https://hub.docker.com/r/amusarra/quarkus-graphql-quickstart-native) | - Pull the native image ARM64 `docker pull amusarra/quarkus-graphql-quickstart-native:latest-arm64` <br/>- Pull the native image AMD64 `docker pull amusarra/quarkus-graphql-quickstart-native:latest-amd64` |
 
-> Remember that to use the podman command, you need to replace `docker` with `podman`. Also remember that the pattern for the version of the image is `latest` or `latest-amd64` or `latest-arm64`; you can replace `latest` with the desired version: `1.0.0`, `1.0.1`, or the branch name (main, develop, etc.) For example, `docker pull amusarra/quarkus-graphql-quickstart:1.0.0`, referer to the release 1.0.0 of the project.
+> Remember that to use the podman command, you need to replace `docker` with `podman`. Also remember that the pattern for the version of the image is `latest`; you can replace `latest` with the desired version: `1.0.0`, `1.0.1`, or the branch name (main, develop, etc.) For example, `docker pull amusarra/quarkus-graphql-quickstart:1.0.0`, referer to the release 1.0.0 of the project.
 
 For more information about the tags available, please visit the Docker Hub repository.
 
@@ -57,17 +55,17 @@ This approach improves user experience and accelerates the development of client
 | **Reduced calls**: optimizes client-server communications.                         | **Initial setup**: requires more configuration and tools compared to REST.                |
 
 > Note: This project has an educational and demonstrative approach. There are intentionally incomplete parts of the code with comments to guide the user in completing the implementation. For example:
-> ```java
->    @Mutation
->    @Description("Create a new author")
->    @Transactional
->    public Author createAuthor(Author author) {
->        // The author is persisted automatically by Panache
->        // because it is a Panache entity.
->        // Extend this method to handle the detached entity as needed.
->        author.persist();
->        return author;
->    }
+> ```typescript
+>  /** `@Mutation` `@Description("Create a new author")` `@Transactional`. */
+>  async createAuthor(author: Author): Promise<Author> {
+>    return await transactional(() => {
+>      // The author is persisted automatically by Panache
+>      // because it is a Panache entity.
+>      // Extend this method to handle the detached entity as needed.
+>      author.persist();
+>      return author;
+>    });
+>  }
 >```
 
 The project follows the classic three-layer architecture.
@@ -111,10 +109,9 @@ Table 1 - Main endpoints of the Quarkus GraphQL application
 To run or develop the project, make sure you have the following tools installed.
 
 * Git 2.33+
-* JDK 21+, [GraalVM](https://www.graalvm.org/downloads/) 21+ (for native build)
-* Container tools like Docker or Podman
-* Apache Maven 3.9.9 (optional if using the Maven wrapper integrated with the sample project)
-* [Quarkus CLI](https://quarkus.io/guides/cli-tooling) 3.18.x (optional, but recommended)
+* [Node.js](https://nodejs.org/) 22.13+ (the built-in `node:sqlite` module is required)
+* npm 10+ (shipped with Node.js)
+* Container tools like Docker or Podman (only to run the application image, or the PostgreSQL and MinIO services)
 
 ## Quickstart
 
@@ -135,27 +132,21 @@ git clone https://github.com/amusarra/quarkus-graphql-quickstart.git
 To start the application in development mode, use one of the following methods:
 
 ```shell
-# Start the application in development mode
-# by using the Maven wrapper integrated with the project.
-./mvnw quarkus:dev
+# Install the dependencies pinned by the lockfile
+npm ci
 ```
 
 ```shell
-# By using the Quarkus CLI.
-# This command requires the Quarkus CLI to be installed on your system.
-quarkus dev
+# Start the application in development mode, restarting on every change
+npm run dev
 ```
 
-> **Note**: Before starting the application in dev mode, make sure you have correctly installed and configured Docker or Podman on your system. In case of incorrect configuration or lack of Docker or Podman, the application will not start correctly, and you may encounter errors like those reported below:
->
-> ```shell
-> 2025-01-29 09:33:31,911 WARN  [org.tes.doc.DockerClientProviderStrategy] (build-26) DOCKER_HOST unix:///var/run/docker.sock is not listening: java.io.IOException: com.sun.jna.LastErrorException: [61] Connection refused
-> 2025-01-29 09:33:31,929 ERROR [org.tes.doc.DockerClientProviderStrategy] (build-26) Could not find a valid Docker environment. Please check configuration. Attempted configurations were:
->	DockerDesktopClientProviderStrategy: failed with exception NullPointerException (Cannot invoke "java.nio.file.Path.toString()" because the return value of "org.testcontainers.dockerclient.DockerDesktopClientProviderStrategy.getSocketPath()" is null)As no valid configuration was found, execution cannot continue.
-> See https://java.testcontainers.org/on_failure.html for more details.
-> 2025-01-29 09:33:31,969 WARN  [io.qua.dep.uti.ContainerRuntimeUtil] (build-26) Command "docker info" exited with error code 1. Rootless container runtime detection might not be reliable or the container service is not running at all.
-> 2025-01-29 09:33:31,971 INFO  [org.tes.DockerClientFactory] (build-26) Testcontainers version: 1.20.4 
-> ```
+> **Note**: Outside the `prod` profile the application does not need Docker or
+> Podman. When no object store address is configured it starts an in-process,
+> S3-compatible endpoint on an ephemeral port and points the MinIO client at it,
+> which is the role Quarkus Dev Services used to play. Set `QUARKUS_MINIO_URL`,
+> `QUARKUS_MINIO_ACCESS_KEY` and `QUARKUS_MINIO_SECRET_KEY` to talk to a real
+> MinIO instead.
 
 To test the GraphQL and REST APIs, open your browser and visit the following URLs:
 
@@ -518,68 +509,38 @@ The main roles of BookConnection are:
 * Aggregating the edges (list elements, in this case, books).
 * Including a PageInfo object to provide pagination details (if there are more pages, end cursor, etc.).
 
-Below is an example implementation of `BookConnection`, which is a GraphQL Type (see the `@Type` annotation). The complete code is available in the example project in `BookConnection.java`.
+Below is an example implementation of `BookConnection`, which is a GraphQL Type (see the `@Type` annotation). The complete code is available in the example project in `src/pagination/type/book-connection.ts`.
 
-```java
-package it.dontesta.labs.quarkus.graphql.pagination.type;
-
-import org.eclipse.microprofile.graphql.Type;
-import java.util.List;
+```typescript
+import type { BookEdge } from './book-edge.js';
+import type { PageInfo } from './page-info.js';
 
 /**
  * Represents a connection to a list of Book edges with pagination information.
  */
-@Type
-public class BookConnection {
-
-  /**
-   * A list of Book edges.
-   */
-  private final List<BookEdge> edges;
-
-  /**
-   * Pagination information for the connection.
-   */
-  private final PageInfo pageInfo;
-
+export class BookConnection {
   /**
    * Constructs a new BookConnection instance.
    *
    * @param edges a list of Book edges
    * @param pageInfo pagination information for the connection
    */
-  private BookConnection(List<BookEdge> edges, PageInfo pageInfo) {
-    this.edges = edges;
-    this.pageInfo = pageInfo;
-  }
+  private constructor(
+    /** A list of Book edges. */
+    readonly edges: readonly BookEdge[],
+    /** Pagination information for the connection. */
+    readonly pageInfo: PageInfo | null,
+  ) {}
 
   /**
    * Creates a new BookConnection instance.
    *
    * @param edges a list of Book edges
    * @param pageInfo pagination information for the connection
-   * @return a new BookConnection instance
+   * @returns a new BookConnection instance
    */
-  public static BookConnection create(List<BookEdge> edges, PageInfo pageInfo) {
+  static create(edges: readonly BookEdge[], pageInfo: PageInfo | null): BookConnection {
     return new BookConnection(edges, pageInfo);
-  }
-
-  /**
-   * Returns the list of Book edges.
-   *
-   * @return the list of Book edges
-   */
-  public List<BookEdge> getEdges() {
-    return edges;
-  }
-
-  /**
-   * Returns the pagination information for the connection.
-   *
-   * @return the pagination information
-   */
-  public PageInfo getPageInfo() {
-    return pageInfo;
   }
 }
 ```
@@ -591,68 +552,37 @@ The main roles of `BookEdge` are:
 * Contains the node, which represents the actual book (the `Book` object).
 * Contains the cursor, which **is a unique identifier** encoded (usually in Base64) that allows pagination between subsequent pages.
 
-Below is an example implementation of `BookEdge`, which is a GraphQL Type (see the `@Type` annotation). The complete code is available in the example project in `BookEdge.java`.
+Below is an example implementation of `BookEdge`, which is a GraphQL Type (see the `@Type` annotation). The complete code is available in the example project in `src/pagination/type/book-edge.ts`.
 
-```java
-package it.dontesta.labs.quarkus.graphql.pagination.type;
-
-import it.dontesta.labs.quarkus.graphql.orm.panache.entity.Book;
-import org.eclipse.microprofile.graphql.Type;
+```typescript
+import type { Book } from '../../orm/panache/entity/book.js';
 
 /**
  * Represents an edge in a connection, containing a node and a cursor.
  */
-@Type
-public class BookEdge {
-
-  /**
-   * The node of type Book.
-   */
-  private final Book node;
-
-  /**
-   * The cursor for this edge.
-   */
-  private final String cursor;
-
+export class BookEdge {
   /**
    * Constructs a new BookEdge instance.
    *
    * @param node the Book node
    * @param cursor the cursor for this edge
    */
-  private BookEdge(Book node, String cursor) {
-    this.node = node;
-    this.cursor = cursor;
-  }
+  private constructor(
+    /** The node of type Book. */
+    readonly node: Book,
+    /** The cursor for this edge. */
+    readonly cursor: string,
+  ) {}
 
   /**
    * Creates a new BookEdge instance.
    *
    * @param node the Book node
    * @param cursor the cursor for this edge
-   * @return a new BookEdge instance
+   * @returns a new BookEdge instance
    */
-  public static BookEdge create(Book node, String cursor) {
+  static create(node: Book, cursor: string): BookEdge {
     return new BookEdge(node, cursor);
-  }
-
-  /**
-   * Returns the Book node.
-   *
-   * @return the Book node
-   */
-  public Book getNode() {
-    return node;
-  }
-
-  /**
-   * Returns the cursor for this edge.
-   *
-   * @return the cursor
-   */
-  public String getCursor() {
-    return cursor;
   }
 }
 ```
@@ -664,67 +594,35 @@ The main roles of `PageInfo` are:
 * hasNextPage: indicates if there are more pages to load. If the list of books contains fewer items than requested (e.g., 10 books out of 20), this field will be true, indicating that more pages are available.
 * endCursor: is the cursor of the last element in the current list, which you can use as `after` in subsequent queries to get the next page.
 
-Below is an example implementation of `PageInfo`, which is a GraphQL Type (see the `@Type` annotation). The complete code is available in the example project in `PageInfo.java`.
+Below is an example implementation of `PageInfo`, which is a GraphQL Type (see the `@Type` annotation). The complete code is available in the example project in `src/pagination/type/page-info.ts`.
 
-```java
-package it.dontesta.labs.quarkus.graphql.pagination.type;
-
-import org.eclipse.microprofile.graphql.Type;
-
+```typescript
 /**
  * Represents pagination information for a connection.
  */
-@Type
-public class PageInfo {
-
-  /**
-   * Indicates if there is a next page.
-   */
-  private final boolean hasNextPage;
-
-  /**
-   * The end cursor for the current page.
-   */
-  private final String endCursor;
-
+export class PageInfo {
   /**
    * Constructs a new PageInfo instance.
    *
    * @param hasNextPage indicates if there is a next page
    * @param endCursor the end cursor for the current page
    */
-  private PageInfo(boolean hasNextPage, String endCursor) {
-    this.hasNextPage = hasNextPage;
-    this.endCursor = endCursor;
-  }
+  private constructor(
+    /** Indicates if there is a next page. */
+    readonly hasNextPage: boolean,
+    /** The end cursor for the current page. */
+    readonly endCursor: string | null,
+  ) {}
 
   /**
    * Creates a new PageInfo instance.
    *
    * @param hasNextPage indicates if there is a next page
    * @param endCursor the end cursor for the current page
-   * @return a new PageInfo instance
+   * @returns a new PageInfo instance
    */
-  public static PageInfo create(boolean hasNextPage, String endCursor) {
+  static create(hasNextPage: boolean, endCursor: string | null): PageInfo {
     return new PageInfo(hasNextPage, endCursor);
-  }
-
-  /**
-   * Returns if there is a next page.
-   *
-   * @return true if there is a next page, false otherwise
-   */
-  public boolean isHasNextPage() {
-    return hasNextPage;
-  }
-
-  /**
-   * Returns the end cursor for the current page.
-   *
-   * @return the end cursor
-   */
-  public String getEndCursor() {
-    return endCursor;
   }
 }
 ```
@@ -738,50 +636,47 @@ public class PageInfo {
 ### Modifying the BookGraphQL Resolver
 To implement cursor-based pagination, we need to make some changes to the `BookGraphQL` resolver. Specifically, we need to add a new `books` method that accepts pagination parameters like `first` (for the number of books to retrieve) and `after` (for the cursor of the previous element). Then, use Panache to retrieve the books in a paginated manner and return a list of `BookEdge` with their respective cursors.
 
-Below is the implementation of the `books` method that accepts pagination parameters and returns a `BookConnection` with the books and pagination information. The complete code is available in the example project in `BookGraphQL.java`.
+Below is the implementation of the `books` method that accepts pagination parameters and returns a `BookConnection` with the books and pagination information. The complete code is available in the example project in `src/ws/graphql/api/book-graphql.ts`.
 
-```java
-    /**
- * Retrieves a paginated list of books.
- *
- * @param first the number of books to retrieve
- * @param after the cursor after which to start retrieving books
- * @return a BookConnection containing the list of books and pagination information
- * @throws GraphQLException if an error occurs during retrieval
- */
-@Query
-public BookConnection books(@Name("first") int first,
-                            @NotEmpty @NotNull @Name("after") String after)
-    throws GraphQLException {
+```typescript
+  /**
+   * Retrieves a paginated list of books.
+   *
+   * @param first the number of books to retrieve
+   * @param after the cursor after which to start retrieving books
+   * @returns a BookConnection containing the list of books and pagination information
+   * @throws GraphQLException if an error occurs during retrieval
+   */
+  books(first: number, after: string): BookConnection {
+    let startIndex: number;
 
-  int startIndex;
+    // Decode the cursor to get the start index
+    try {
+      const decoded = decodeBase64(after).toString('utf8');
+      startIndex = parseInt10(decoded) + 1;
+    } catch (error) {
+      if (error instanceof IllegalArgumentException) {
+        throw new GraphQLException('Invalid cursor format', error);
+      }
+      throw error;
+    }
 
-  // Decode the cursor to get the start index
-  try {
-    String decoded = new String(Base64.getDecoder().decode(after));
-    startIndex = Integer.parseInt(decoded) + 1;
-  } catch (IllegalArgumentException e) {
-    throw new GraphQLException("Invalid cursor format", e);
+    // Query Panache to get the books
+    const query: PanacheQuery<Book> = Book.findAllBooks();
+    const books = query.range(startIndex, startIndex + first - 1).list();
+
+    // Create the edges response with the cursor
+    const edges = books.map((book) => {
+      const cursor = encodeBase64(String(book.id));
+      return BookEdge.create(book, cursor);
+    });
+
+    // Check if there are more pages
+    const endCursor = edges.length === 0 ? null : (edges[edges.length - 1] as BookEdge).cursor;
+    const hasNextPage = startIndex + first < query.count();
+
+    return BookConnection.create(edges, PageInfo.create(hasNextPage, endCursor));
   }
-
-  // Query Panache to get the books
-  PanacheQuery<Book> query = Book.findAll();
-  List<Book> books = query.range(startIndex, startIndex + first - 1).list();
-
-  // Create the edges response with the cursor
-  List<BookEdge> edges = books.stream()
-      .map(book -> {
-        String cursor = Base64.getEncoder().encodeToString(String.valueOf(book.id).getBytes());
-        return BookEdge.create(book, cursor);
-      })
-      .toList();
-
-  // Check if there are more pages
-  String endCursor = edges.isEmpty() ? null : edges.get(edges.size() - 1).getCursor();
-  boolean hasNextPage = (startIndex + first) < query.count();
-
-  return BookConnection.create(edges, PageInfo.create(hasNextPage, endCursor));
-}
 ```
 
 Using the `range(startIndex, startIndex + first - 1)` method of Panache, we can retrieve books in a paginated manner. We add cursors (encoded in Base64) for each book and return a list of `BookEdge` along with pagination information. As a final step, we check if there are more pages available and return a `BookConnection` with the books and pagination information.
@@ -949,59 +844,56 @@ To implement subscriptions, we need to follow these steps:
 2. Modify the `createBook` method to send a book creation event to the `bookProcessor`.
 3. Create a `bookCreated` method that returns a `Publisher` to receive real-time updates.
 
-Below is the implementation of the steps described above. The complete code is available in the example project in `BookGraphQL.java`.
+Below is the implementation of the steps described above. The complete code is available in the example project in `src/ws/graphql/api/book-graphql.ts`.
 
-```java
-    // Broadcast processor to notify subscribers
-    private final BroadcastProcessor<Book> processor = BroadcastProcessor.create();
+```typescript
+  // Broadcast processor to notify subscribers
+  private readonly processor = BroadcastProcessor.create<Book>();
 
-    /**
-     * Creates a new book and notifies subscribers.
-     *
-     * @param book the book to create
-     * @return the created book
-     * @throws GraphQLException if an error occurs during creation
-     */
-    @Mutation
-    @Description("Create a new book")
-    @Transactional
-    public Book createBook(Book book) throws GraphQLException {
+  /**
+   * Creates a new book and notifies subscribers.
+   *
+   * @param book the book to create
+   * @returns the created book
+   * @throws GraphQLException if an error occurs during creation
+   */
+  async createBook(book: Book): Promise<Book> {
+    return await transactional(() => {
+      // Handle the editor and authors
+      this.handleEditor(book);
+      this.handleAuthors(book);
 
-        // Handle the editor and authors
-        handleEditor(book);
-        handleAuthors(book);
+      // Persist the book and flush to get the ID
+      this.entityManager.persist(book);
+      this.entityManager.flush();
 
-        // Persist the book and flush to get the ID
-        entityManager.persist(book);
-        entityManager.flush();
+      // Notify subscribers
+      this.processor.onNext(book);
 
-        // Notify subscribers
-        processor.onNext(book);
+      return book;
+    });
+  }
 
-        return book;
-    }
-
-    /**
-     * Subscription method to notify subscribers when a new book is created.
-     *
-     * @return a Multi stream of Book objects representing the created books
-     */
-    @Subscription
-    public Multi<Book> bookCreated() {
-      return processor;
-    }
+  /**
+   * Subscription method to notify subscribers when a new book is created.
+   *
+   * @returns a stream of Book objects representing the created books
+   */
+  bookCreated(): AsyncIterable<Book> {
+    return this.processor;
+  }
 ```
 
-After creating a new book, we send the book creation event to the `processor` using `processor.onNext(book)`. This notifies clients subscribed to the `bookCreated` subscription whenever a new book is created. The `bookCreated` method returns a `Multi` stream of books, representing the books created in real-time.
+After creating a new book, we send the book creation event to the `processor` using `processor.onNext(book)`. This notifies clients subscribed to the `bookCreated` subscription whenever a new book is created. The `bookCreated` method returns an async stream of books, representing the books created in real-time.
 
 ### Testing Subscriptions
-To test subscriptions, we can use a WebSocket client like [GraphiQL](http://localhost:8080/q/dev-ui/io.quarkus.quarkus-smallrye-graphql/graphql-ui) or [Apollo Client](https://www.apollographql.com/docs/react/get-started/). In this example, we will use GraphiQL to test subscriptions since it is already integrated with SmallRye GraphQL. Another client that can be used is [Altair GraphQL Client](https://altairgraphql.dev/).
+To test subscriptions, we can use a WebSocket client like [Altair GraphQL Client](https://altairgraphql.dev/) or [Apollo Client](https://www.apollographql.com/docs/react/get-started/). The subscription endpoint speaks the `graphql-transport-ws` protocol at `ws://localhost:8080/api/graphql`.
 
 To test subscriptions, follow these steps:
-1. Start the application in Dev mode with the command `./mvnw quarkus:dev` or `quarkus dev`.
-2. Open GraphiQL by visiting the URL [http://localhost:8080/q/dev-ui/io.quarkus.quarkus-smallrye-graphql/graphql-ui](http://localhost:8080/q/dev-ui/io.quarkus.quarkus-smallrye-graphql/graphql-ui).
+1. Start the application in Dev mode with the command `npm run dev`.
+2. Point your GraphQL client at `ws://localhost:8080/api/graphql`.
 3. Execute the `bookCreated` subscription query to receive real-time updates.
-4. Create a new book using the `createBook` mutation and verify that GraphiQL receives the real-time update.
+4. Create a new book using the `createBook` mutation and verify that the client receives the real-time update.
 
 The `bookCreated` subscription query is similar to the one shown below:
 
@@ -1074,71 +966,56 @@ Figure 5 - MinIO Console
 
 ## Creating the artifact and running the application
 
-The application can be packaged using the command:
+The application can be compiled using the command:
 
 ```bash
-./mvnw package
+npm run build
 ```
 
-This command generates the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Note that this is not an über-jar, as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+This command emits the JavaScript for the whole application into the `dist/`
+directory. The dependencies are not bundled: they stay in `node_modules/`, which
+is why the container image copies both.
 
-> If you want to run the application via jar remember that you need a database and MinIO running.
+> If you want to run the application from `dist/` remember that you need a database and MinIO running.
 > You can see the docker-compose file in the `src/main/docker` directory for more information
 > on how to start the services.
 
 The application can now be run using the command:
 
 ```bash
-java -jar target/quarkus-app/quarkus-run.jar.
+node dist/main.js
 ```
 
-If you want to create an über-jar, run the following command:
+To run it straight from the TypeScript sources, without compiling first:
 
 ```bash
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+npm start
 ```
 
-The application, packaged as an über-jar, can be run with:
+## Running the tests
+
+The test suite runs the whole application — HTTP layer, GraphQL schema,
+persistence and object store included:
 
 ```bash
-java -jar target/*-runner.jar.
+npm test
 ```
 
-## Creating a native executable
-
-You can create a native executable using the command:
-
 ```bash
-./mvnw package -Dnative
-```
-
-Alternatively, if you do not have GraalVM installed, you can create the native executable using a container with the command:
-
-```bash
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
-
-After creation, you can run your native executable with:
-
-```bash
-./target/quarkus-graphql-quickstart-1.0.0-SNAPSHOT-runner
+# ... with a coverage report
+npm run test:coverage
 ```
 
 ## Running the application via Docker Compose and Podman Compose
-The container images of the application are created through two GitHub actions defined in the files in the `.github/workflows` directory:
+The container image of the application is created through the GitHub action defined in `docker_publish.yml`, in the `.github/workflows` directory. It builds the image for both ARM64 and AMD64 architectures and publishes it to Docker Hub.
 
-1. `docker_publish.yml` builds the container image in JVM mode for both ARM64 and AMD64 architectures and publishes it to Docker Hub.
-2. `docker_publish_native_quarkus_cli.yml` builds the container image in Native mode for both ARM64 and AMD64 architectures and publishes it to Docker Hub. Using the Quarkus CLI, the native image is built and then packaged into a container image.
+The created image is available on Docker Hub at the following link:
 
-The created images are available on Docker Hub at the following link: 
+1. Container Image - https://hub.docker.com/r/amusarra/quarkus-graphql-quickstart/tags
 
-1. Container Image - JVM Mode - https://hub.docker.com/r/amusarra/quarkus-graphql-quickstart/tags
-2. Container Image - Native Mode - https://hub.docker.com/r/amusarra/quarkus-graphql-quickstart-native/tags
+To build the container image, the reference Dockerfile is `Dockerfile` (in `src/main/docker/Dockerfile`).
 
-To build the container image in JVM mode, the reference Dockerfile is `Dockerfile.jvm` (in `src/main/docker/Dockerfile.jvm`) and for the Native mode container image, the reference Dockerfile is `Dockerfile.native` (in `src/main/docker/Dockerfile.native`).
-
-The file [docker-compose.yml](src/main/docker/docker-compose.yml) was created to run the application (JVM mode) in container environment. To run the application in container environment, execute the following commands:
+The file [docker-compose.yml](src/main/docker/docker-compose.yml) was created to run the application in container environment. To run the application in container environment, execute the following commands:
 
 ```shell
 # Export the environment variable to enable and enable the HTTPS protocol

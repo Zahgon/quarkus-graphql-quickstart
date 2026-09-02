@@ -1,3 +1,9 @@
+truth.md
+instruction.md
+fix.patch
+test.patch
+golden.patch
+
 #Maven
 target/
 pom.xml.tag
@@ -43,3 +49,9 @@ nb-configuration.xml
 /.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
+
+# Node / TypeScript
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
